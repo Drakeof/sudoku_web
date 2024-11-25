@@ -1,0 +1,165 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-color: #ecf0f1;
+    --text-color: #34495e;
+    --board-color: #ffffff;
+    --border-color: #bdc3c7;
+    --box-border-color: #2c3e50;
+    --cell-shadow-color: rgba(0, 0, 0, 0.2);
+    --box-background-1: #FFD700;
+    --box-background-2: #FF69B4;
+    --box-background-3: #00CED1;
+    --box-background-4: #FFA500;
+    --box-background-5: #9370DB;
+    --box-background-6: #32CD32;
+    --box-background-7: #FF6347;
+    --box-background-8: #4169E1;
+    --box-background-9: #FF1493;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    transition: background-color 0.3s ease, background-image 0.3s ease;
+    background-image: url('default-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+#controls {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+select, button {
+    padding: 10px 15px;
+    margin: 5px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+select:hover, button:hover {
+    background-color: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+#board {
+    display: inline-block;
+    background-color: var(--board-color);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.row {
+    display: flex;
+}
+
+.box {
+    display: inline-block;
+    border: 2px solid var(--box-border-color);
+    margin: 2px;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+/* Añadir división y fondo animado para cada matriz 3x3 */
+.box:nth-child(3n-2) { background-color: var(--box-background-1); }
+.box:nth-child(3n-1) { background-color: var(--box-background-2); }
+.box:nth-child(3n) { background-color: var(--box-background-3); }
+
+.row:nth-child(3n-2) .box:nth-child(3n-2) { background-color: var(--box-background-4); }
+.row:nth-child(3n-2) .box:nth-child(3n-1) { background-color: var(--box-background-5); }
+.row:nth-child(3n-2) .box:nth-child(3n) { background-color: var(--box-background-6); }
+
+.row:nth-child(3n-1) .box:nth-child(3n-2) { background-color: var(--box-background-7); }
+.row:nth-child(3n-1) .box:nth-child(3n-1) { background-color: var(--box-background-8); }
+.row:nth-child(3n-1) .box:nth-child(3n) { background-color: var(--box-background-9); }
+
+.row:nth-child(3n) .box:nth-child(3n-2) { background-color: var(--box-background-1); }
+.row:nth-child(3n) .box:nth-child(3n-1) { background-color: var(--box-background-2); }
+.row:nth-child(3n) .box:nth-child(3n) { background-color: var(--box-background-3); }
+
+.box {
+    animation: colorChange 10s infinite;
+}
+
+@keyframes colorChange {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+input[type="text"] {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 20px;
+    margin: 1px;
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    transition: all 0.3s ease;
+    /* Efecto 3D para las casillas */
+    box-shadow: inset 2px 2px 3px var(--cell-shadow-color), 
+                inset -2px -2px 3px var(--board-color);
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: inset 2px 2px 3px var(--cell-shadow-color), 
+                inset -2px -2px 3px var(--board-color),
+                0 0 5px var(--primary-color);
+}
+
+input[type="text"].initial {
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    select, button {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    input[type="text"] {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+
+    .box {
+        border-width: 1px;
+    }
+}
+

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .correct {
+            background-color: #90EE90 !important; /* Light green */
+        }
+        .incorrect {
+            background-color: #FFB6C1 !important; /* Light red */
+        }
+        #board-container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .board {
+            margin: 10px;
+        }
+        #solution-board {
+            display: none;
+        }
+        /* Estilos para el fondo animado */
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sudoku Web</h1>
+    <div id="controls">
+        <select id="size">
+            <option value="2">4x4</option>
+            <option value="3" selected>9x9</option>
+            <option value="4">16x16</option>
+        </select>
+        <select id="level">
+            <option value="easy">Fácil</option>
+            <option value="medium">Medio</option>
+            <option value="hard">Difícil</option>
+        </select>
+        <button id="new_game">Nuevo Juego</button>
+        <button id="check_solution">Verificar Solución</button>
+        <button id="help">Ayuda</button>
+        <button id="show_solution">Mostrar/Ocultar Solución</button>
+    </div>
+    <div id="board-container">
+        <div id="board" class="board"></div>
+        <div id="solution-board" class="board"></div>
+    </div>
+
+    <script>
+        let solution;
+
+        $(document).ready(function() {
+            // Evento para iniciar un nuevo juego
+            $('#new_game').click(function() {
+                const size = $('#size').val();
+                const level = $('#level').val();
+                $.ajax({
+                    url: '/new_game',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({size, level}),
+                    success: function(data) {
+                        solution = data.solution;
+                        renderBoard(data.board, false, '#board');
+                        renderBoard(solution, true, '#solution-board');
+                        $('#solution-board').hide();
+                    }
+                });
+            });
+
+            // Evento para verificar la solución actual
+            $('#check_solution').click(function() {
+                const board = getBoardState();
+                $.ajax({
+                    url: '/check_solution',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({board}),
+                    success: function(response) {
+                        if (response.valid) {
+                            alert("¡Felicidades! Has resuelto el Sudoku correctamente.");
+                        } else {
+                            alert("La solución es incorrecta. Inténtalo de nuevo.");
+                        }
+                    }
+                });
+            });
+
+            // Evento para mostrar la ayuda
+            $('#help').click(function() {
+                const helpText = "Cómo jugar Sudoku:\n\n" +
+                    "1. Cada fila debe contener los números del 1 al 9 sin repetir.\n" +
+                    "2. Cada columna debe contener los números del 1 al 9 sin repetir.\n" +
+                    "3. Cada bloque de 3x3 debe contener los números del 1 al 9 sin repetir.\n\n" +
+                    "Para ver un tutorial en video, visita: https://www.youtube.com/watch?v=OtKxtvMUahA";
+                alert(helpText);
+            });
+
+            // Evento para mostrar/ocultar la solución
+            $('#show_solution').click(function() {
+                if (solution) {
+                    $('#solution-board').toggle();
+                } else {
+                    alert("No se pudo obtener la solución. Por favor, inicia un nuevo juego.");
+                }
+            });
+        });
+
+        // Función para renderizar el tablero de Sudoku
+        function renderBoard(board, isSolution = false, targetSelector) {
+            $(targetSelector).empty();
+            board.forEach((row, rowIndex) => {
+                const rowDiv = $('<div class="row"></div>');
+                row.forEach((cell, colIndex) => {
+                    const cellInput = $('<input type="text" maxlength="1">');
+                    cellInput.on('keypress', function(e) {
+                        if (e.which !== 8 && e.which !== 0 && (e.which < 48 || e.which > 57)) {
+                            e.preventDefault();
+                        }
+                        let currentValue = $(this).val();
+                        if (currentValue.length >= 2 && e.which !== 8 && e.which !== 0) {
+                            e.preventDefault();
+                        }
+                    });
+                    if (cell !== 0) {
+                        cellInput.val(cell).prop('readonly', true).addClass(isSolution ? 'solution' : 'initial');
+                    } else if (!isSolution) {
+                        cellInput.on('input', function() {
+                            validateInput(this, rowIndex, colIndex);
+                        });
+                    }
+                    rowDiv.append(cellInput);
+                });
+                $(targetSelector).append(rowDiv);
+            });
+        }
+
+        // Función para validar la entrada del usuario en cada celda
+        function validateInput(input, row, col) {
+            const value = input.value;
+            const boardSize = Math.sqrt(solution.length);
+            
+            if (value && (isNaN(value) || parseInt(value) < 1 || parseInt(value) > boardSize ** 2)) {
+                input.value = '';
+                return;
+            }
+            
+            if (value) {
+                const isCorrect = parseInt(value) === solution[row][col];
+                $(input).removeClass('correct incorrect').addClass(isCorrect ? 'correct' : 'incorrect');
+            } else {
+                $(input).removeClass('correct incorrect');
+            }
+        }
+
+        // Función para obtener el estado actual del tablero
+        function getBoardState() {
+            const board = [];
+            $('#board .row').each(function() {
+                const row = [];
+                $(this).find('input').each(function() {
+                    row.push($(this).val() ? parseInt($(this).val()) : 0);
+                });
+                board.push(row);
+            });
+            return board;
+        }
+
+        // Asegurarse de que se pueda escribir en las celdas vacías
+        $(document).on('focus', '#board input:not([readonly])', function() {
+            $(this).prop('readonly', false);
+        });
+    </script>
+</body>
+</html>
